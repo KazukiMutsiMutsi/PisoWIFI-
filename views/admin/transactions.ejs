@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transactions — Piso WiFi</title>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-layout">
+  <%- include('_nav') %>
+  <main>
+    <h2>💰 All Transactions</h2>
+    <table class="data-table">
+      <thead>
+        <tr><th>#</th><th>MAC Address</th><th>Coins Paid</th><th>Minutes</th><th>Date/Time</th></tr>
+      </thead>
+      <tbody>
+        <% transactions.forEach((tx, i) => { %>
+          <tr>
+            <td><%= i + 1 %></td>
+            <td><code><%= tx.mac_address %></code></td>
+            <td>₱<%= tx.coins_paid %></td>
+            <td><%= tx.minutes %> min</td>
+            <td><%= new Date(tx.created_at * 1000).toLocaleString('en-PH') %></td>
+          </tr>
+        <% }) %>
+        <% if (transactions.length === 0) { %>
+          <tr><td colspan="5" class="empty">No transactions yet.</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </main>
+</body>
+</html>

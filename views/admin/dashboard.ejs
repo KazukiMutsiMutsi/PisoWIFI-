@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Piso WiFi Admin</title>
+  <link rel="stylesheet" href="/css/admin.css">
+  <style>
+    /* Restock modal */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6); z-index: 999;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-box {
+      background: #fff; border-radius: 16px;
+      padding: 28px; width: 100%; max-width: 380px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .modal-box h3 { margin: 0 0 20px; font-size: 1.2rem; }
+    .modal-close {
+      float: right; background: none; border: none;
+      font-size: 1.3rem; cursor: pointer; color: #999; margin-top: -4px;
+    }
+    /* Pending eload orders badge */
+    .pending-alert {
+      background: #fff7ed; border: 1px solid #fed7aa;
+      border-radius: 10px; padding: 14px 18px;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .pending-alert .pa-text { color: #9a3412; font-size: .9rem; font-weight: 600; }
+    .pending-alert .pa-sub  { color: #c2410c; font-size: .78rem; margin-top: 2px; }
+    /* Eload balance card clickable */
+    .stat-card.clickable { cursor: pointer; transition: transform .15s, box-shadow .15s; }
+    .stat-card.clickable:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+    .stat-card .restock-hint { font-size: .72rem; opacity: .7; margin-top: 4px; }
+    /* Low balance pulse */
+    @keyframes pulse-red { 0%,100%{opacity:1} 50%{opacity:.6} }
+    .stat-card.low-balance { animation: pulse-red 2s infinite; }
+  </style>
+</head>
+<body class="admin-layout">
+  <%- include('_nav') %>
+  <main>
+    <h2>Dashboard</h2>
+
+    <!-- Pending eload orders alert -->
+    <% if (pendingEload > 0) { %>
+      <div class="pending-alert">
+        <div>
+          <div class="pa-text">⏳ <%= pendingEload %> eload order<%= pendingEload > 1 ? 's' : '' %> waiting</div>
+          <div class="pa-sub">Customers are waiting for their load. Send it now!</div>
+        </div>
+        <a href="/admin/eload" class="btn-danger small">View Orders</a>
+      </div>
+    <% } %>
+
+    <!-- Low eload warning -->
+    <% if (eloadBalance < 100) { %>
+      <div class="alert error" style="margin-bottom:20px">
+        ⚠️ <strong>Low eload stock!</strong> Only ₱<%= eloadBalance.toFixed(2) %> left.
+        <a href="#" onclick="openRestock()" style="color:#b91c1c;font-weight:700"> Restock now →</a>
+      </div>
+    <% } %>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card blue">
+        <div class="stat-value"><%= activeSess %></div>
+        <div class="stat-label">Active WiFi Sessions</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-value">₱<%= todayEarned %></div>
+        <div class="stat-label">WiFi Earned Today</div>
+      </div>
+      <div class="stat-card purple">
+        <div class="stat-value">₱<%= totalEarned %></div>
+        <div class="stat-label">WiFi Total Earnings</div>
+      </div>
+
+      <!-- Eload balance — click to restock -->
+      <div class="stat-card orange clickable <%= eloadBalance < 100 ? 'low-balance' : '' %>"
+           onclick="openRestock()" title="Click to restock eload">
+        <div class="stat-value">₱<%= eloadBalance.toFixed(2) %></div>
+        <div class="stat-label">Eload Stock</div>
+        <div class="restock-hint">🔄 Tap to restock</div>
+      </div>
+
+      <div class="stat-card blue">
+        <div class="stat-value">₱<%= eloadTodaySold %></div>
+        <div class="stat-label">Eload Sold Today</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-value">₱<%= eloadTotalSold %></div>
+        <div class="stat-label">Eload Total Sold</div>
+      </div>
+    </div>
+
+    <!-- Recent WiFi Transactions -->
+    <h3>Recent WiFi Transactions</h3>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>MAC Address</th>
+          <th>Coins Paid</th>
+          <th>Minutes</th>
+          <th>Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% recentTx.forEach(tx => { %>
+          <tr>
+            <td><code><%= tx.mac_address %></code></td>
+            <td>₱<%= tx.coins_paid %></td>
+            <td><%= tx.minutes %> min</td>
+            <td><%= new Date(tx.created_at * 1000).toLocaleString('en-PH') %></td>
+          </tr>
+        <% }) %>
+        <% if (recentTx.length === 0) { %>
+          <tr><td colspan="4" class="empty">No transactions yet.</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+
+    <!-- Recent Eload Orders -->
+    <h3>Recent Eload Orders</h3>
+    <table class="data-table">
+      <thead>
+        <tr><th>Time</th><th>Phone</th><th>Network</th><th>Amount</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody>
+        <% recentEload.forEach(o => { %>
+          <tr>
+            <td><%= new Date(o.created_at * 1000).toLocaleTimeString('en-PH') %></td>
+            <td><strong><%= o.phone %></strong></td>
+            <td><span class="network-badge net-<%= o.network.toLowerCase() %>"><%= o.network %></span></td>
+            <td>₱<%= o.amount %></td>
+            <td>
+              <span class="badge
+                <%= o.status === 'completed' ? 'active' :
+                   o.status === 'pending'    ? 'pending' : 'inactive' %>">
+                <%= o.status === 'completed' ? '✅ Done' :
+                   o.status === 'pending'    ? '⏳ Pending' : '❌ Failed' %>
+              </span>
+            </td>
+            <td>
+              <% if (o.status === 'pending') { %>
+                <form action="/admin/eload/orders/complete" method="POST" style="display:inline">
+                  <input type="hidden" name="id" value="<%= o.id %>">
+                  <button class="btn-primary small">✅ Done</button>
+                </form>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+        <% if (recentEload.length === 0) { %>
+          <tr><td colspan="6" class="empty">No eload orders yet.</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+
+  </main>
+
+  <!-- ── Quick Restock Modal ──────────────────────────────────────────── -->
+  <div class="modal-overlay" id="restock-modal">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeRestock()">✕</button>
+      <h3>🔄 Restock Eload</h3>
+
+      <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;
+                  padding:12px;margin-bottom:16px;font-size:.85rem;color:#9a3412">
+        <strong>Current stock: ₱<%= eloadBalance.toFixed(2) %></strong><br>
+        Enter the amount you just loaded into your GCash / Smart Padala / Load Central wallet.
+      </div>
+
+      <form action="/admin/eload/add" method="POST">
+        <div class="form-group">
+          <label>Amount Loaded (₱)</label>
+          <input type="number" name="amount" id="restock-amount"
+                 min="1" step="1" required placeholder="e.g. 500"
+                 style="font-size:1.2rem;text-align:center">
+        </div>
+
+        <div class="form-group">
+          <label>Source</label>
+          <select name="note" style="width:100%;padding:10px 12px;border:1px solid #ddd;
+                  border-radius:8px;font-size:.95rem">
+            <option value="GCash load">GCash</option>
+            <option value="Smart Padala load">Smart Padala</option>
+            <option value="Load Central load">Load Central</option>
+            <option value="PayMaya load">PayMaya / Maya</option>
+            <option value="Cash deposit">Cash / Bank deposit</option>
+            <option value="Other source">Other</option>
+          </select>
+        </div>
+
+        <!-- Quick amount buttons -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px">
+          <% [100,200,500,1000].forEach(amt => { %>
+            <button type="button" class="btn-primary small"
+                    onclick="document.getElementById('restock-amount').value=<%= amt %>">
+              ₱<%= amt %>
+            </button>
+          <% }) %>
+        </div>
+
+        <button type="submit" class="btn-primary full">✅ Add to Stock</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function openRestock()  { document.getElementById('restock-modal').classList.add('show'); }
+    function closeRestock() { document.getElementById('restock-modal').classList.remove('show'); }
+    document.getElementById('restock-modal').addEventListener('click', function(e) {
+      if (e.target === this) closeRestock();
+    });
+    // Auto-refresh only when tab is visible and no modal is open
+    let _rt = null;
+    function scheduleRefresh() {
+      clearTimeout(_rt);
+      _rt = setTimeout(() => {
+        const modalOpen = document.getElementById('restock-modal').classList.contains('show');
+        if (!document.hidden && !modalOpen) location.reload();
+        else scheduleRefresh();
+      }, 30000);
+    }
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) scheduleRefresh(); });
+    scheduleRefresh();
+  </script>
+</body>
+</html>

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buy Eload — <%= wifiName %></title>
+  <link rel="stylesheet" href="/css/portal.css">
+  <style>
+    .network-tabs { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
+    .net-tab {
+      padding:8px 16px; border-radius:20px; border:2px solid rgba(255,255,255,0.2);
+      cursor:pointer; font-size:.85rem; color:rgba(255,255,255,0.7);
+      transition:all .15s; background:rgba(255,255,255,0.05);
+    }
+    .net-tab.active, .net-tab:hover {
+      border-color:#f7c948; color:#f7c948; background:rgba(247,201,72,0.1);
+    }
+    .product-list { display:none; }
+    .product-list.show { display:block; }
+    .product-card {
+      border:1px solid rgba(255,255,255,0.12); border-radius:12px;
+      padding:14px 16px; margin-bottom:10px;
+      display:flex; justify-content:space-between; align-items:center;
+      background:rgba(255,255,255,0.04);
+    }
+    .product-card:hover { border-color:rgba(247,201,72,0.4); background:rgba(247,201,72,0.06); }
+    .prod-info .prod-name { font-weight:600; color:#fff; }
+    .prod-info .prod-desc { font-size:.78rem; color:rgba(255,255,255,0.5); margin-top:2px; }
+    .prod-price { font-size:1.3rem; font-weight:700; color:#f7c948; }
+    .btn-buy {
+      background:linear-gradient(135deg,#f7c948,#e07b00);
+      border:none; border-radius:8px; padding:8px 16px;
+      color:#1a1a2e; font-weight:700; cursor:pointer; font-size:.85rem;
+    }
+
+    .order-form { display:none; }
+    .order-form.show { display:block; }
+    .back-btn {
+      background:none; border:1px solid rgba(255,255,255,0.3);
+      border-radius:8px; color:rgba(255,255,255,0.7);
+      padding:8px 14px; cursor:pointer; margin-bottom:16px; font-size:.85rem;
+    }
+    .phone-input {
+      width:100%; padding:14px; background:rgba(255,255,255,0.08);
+      border:1px solid rgba(255,255,255,0.2); border-radius:10px;
+      color:#fff; font-size:1.1rem; text-align:center; letter-spacing:2px;
+      margin:12px 0;
+    }
+    .phone-input::placeholder { color:rgba(255,255,255,0.3); letter-spacing:0; }
+    .phone-input:focus { outline:none; border-color:#f7c948; }
+
+    .numpad { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:12px 0; }
+    .numpad-btn {
+      padding:14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.1);
+      border-radius:10px; color:#fff; font-size:1.2rem; font-weight:600; cursor:pointer;
+      transition:background .1s;
+    }
+    .numpad-btn:active { background:rgba(247,201,72,0.2); }
+    .numpad-btn.del { color:#f87171; }
+    .numpad-btn.zero { grid-column: span 2; }
+
+    .confirm-card {
+      background:rgba(247,201,72,0.1); border:1px solid rgba(247,201,72,0.3);
+      border-radius:12px; padding:16px; margin:12px 0; text-align:center;
+    }
+    .confirm-card .confirm-network { font-size:.8rem; color:rgba(255,255,255,0.5); }
+    .confirm-card .confirm-amount  { font-size:1.8rem; font-weight:700; color:#f7c948; }
+    .confirm-card .confirm-phone   { font-size:1rem; color:#fff; margin-top:4px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Product selection -->
+    <div id="step-products">
+      <div class="logo-area">
+        <div class="coin-icon">📱</div>
+        <h1>Buy Eload</h1>
+        <p class="tagline">Insert coin first, then buy load</p>
+      </div>
+
+      <% if (message) { %><div class="alert success"><%= message %></div><% } %>
+      <% if (error)   { %><div class="alert error"><%= error %></div><% } %>
+
+      <% if (!hasSession) { %>
+      <!-- ══ NO ACTIVE SESSION — must insert coin first ══ -->
+      <div style="text-align:center;padding:30px 16px">
+        <div style="font-size:4rem;margin-bottom:16px">🪙</div>
+        <p style="font-size:1.1rem;font-weight:700;color:#f7c948;letter-spacing:1px;margin-bottom:10px">
+          Insert a Coin First
+        </p>
+        <p style="font-size:.88rem;color:rgba(255,255,255,0.5);margin-bottom:28px;line-height:1.6">
+          You need an active WiFi session to buy eload.<br>
+          Drop a coin into the machine, then come back here.
+        </p>
+        <a href="/portal" style="display:inline-block;padding:14px 32px;
+           background:linear-gradient(135deg,#f7c948,#e07b00);
+           border-radius:12px;color:#1a1a2e;font-weight:700;
+           text-decoration:none;font-size:1rem;letter-spacing:1px">
+          ← Go Insert Coin
+        </a>
+      </div>
+
+      <% } else { %>
+      <!-- ══ HAS SESSION — show products ══ -->
+
+      <% if (products.length === 0) { %>
+        <div class="alert error">No eload products available right now. Please ask the operator.</div>
+      <% } else { %>
+
+        <!-- Network filter tabs -->
+        <div class="network-tabs">
+          <div class="net-tab active" data-net="all">All</div>
+          <% networks.forEach(n => { %>
+            <div class="net-tab" data-net="<%= n %>"><%= n %></div>
+          <% }) %>
+        </div>
+
+        <!-- Products per network -->
+        <% networks.forEach(net => { %>
+          <div class="product-list" data-net="<%= net %>">
+            <% products.filter(p => p.network === net).forEach(p => { %>
+              <div class="product-card"
+                   data-id="<%= p.id %>"
+                   data-network="<%= p.network %>"
+                   data-name="<%= p.name.replace(/"/g,'&quot;') %>"
+                   data-price="<%= p.selling_price %>"
+                   data-desc="<%= (p.description||'').replace(/"/g,'&quot;') %>"
+                   onclick="selectProduct(this)">
+                <div class="prod-info">
+                  <div class="prod-name"><%= p.name %></div>
+                  <% if (p.description) { %>
+                    <div class="prod-desc"><%= p.description %></div>
+                  <% } %>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div class="prod-price">₱<%= p.selling_price %></div>
+                  <button class="btn-buy">Buy</button>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% }) %>
+
+        <!-- "All" group -->
+        <div class="product-list show" data-net="all">
+          <% products.forEach(p => { %>
+            <div class="product-card"
+                 data-id="<%= p.id %>"
+                 data-network="<%= p.network %>"
+                 data-name="<%= p.name.replace(/"/g,'&quot;') %>"
+                 data-price="<%= p.selling_price %>"
+                 data-desc="<%= (p.description||'').replace(/"/g,'&quot;') %>"
+                 onclick="selectProduct(this)">
+              <div class="prod-info">
+                <div class="prod-name"><%= p.name %></div>
+                <% if (p.description) { %>
+                  <div class="prod-desc"><%= p.description %></div>
+                <% } %>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <div class="prod-price">₱<%= p.selling_price %></div>
+                <button class="btn-buy">Buy</button>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+
+      <% } %>
+      <% } /* end hasSession */ %>
+
+      <div class="footer" style="margin-top:20px">
+        <a href="/portal" style="color:rgba(255,255,255,0.4);font-size:.8rem;text-decoration:none">
+          ← Back to WiFi Portal
+        </a>
+      </div>
+    </div>
+
+    <!-- Phone number entry -->
+    <div id="step-phone" class="order-form">
+      <button class="back-btn" onclick="goBack()">← Back</button>
+
+      <div class="confirm-card">
+        <div class="confirm-network" id="cf-network"></div>
+        <div class="confirm-amount" id="cf-amount"></div>
+        <div style="font-size:.85rem;color:rgba(255,255,255,0.6)" id="cf-name"></div>
+      </div>
+
+      <p style="color:rgba(255,255,255,0.7);font-size:.9rem;text-align:center;margin-bottom:4px">
+        Enter the phone number to load:
+      </p>
+
+      <input type="tel" class="phone-input" id="phone-display"
+             placeholder="09XX XXX XXXX" readonly maxlength="13">
+
+      <!-- Numpad -->
+      <div class="numpad">
+        <% ['1','2','3','4','5','6','7','8','9'].forEach(n => { %>
+          <button class="numpad-btn" onclick="numpad('<%= n %>')"><%= n %></button>
+        <% }) %>
+        <button class="numpad-btn del" onclick="numpad('del')">⌫</button>
+        <button class="numpad-btn zero" onclick="numpad('0')">0</button>
+      </div>
+
+      <button class="btn-pay" id="confirm-btn" onclick="confirmOrder()" disabled>
+        🪙 Insert Coins & Confirm
+      </button>
+      <p style="color:rgba(255,255,255,0.4);font-size:.75rem;text-align:center;margin-top:8px">
+        Insert exact coins first, then press confirm
+      </p>
+    </div>
+
+  </div>
+
+  <script>
+    let selectedProduct = null;
+    let phoneRaw = '';
+
+    // ── Network tab filter ────────────────────────────────────────────
+    document.querySelectorAll('.net-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.net-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const net = tab.dataset.net;
+        document.querySelectorAll('.product-list').forEach(list => {
+          list.classList.toggle('show', list.dataset.net === net);
+        });
+      });
+    });
+
+    // ── Product selection ─────────────────────────────────────────────
+    function selectProduct(el) {
+      const { id, network, name, price, desc } = el.dataset;
+      selectedProduct = { id, network, name, price: parseFloat(price) };
+      document.getElementById('cf-network').textContent = network;
+      document.getElementById('cf-amount').textContent  = '₱' + price;
+      document.getElementById('cf-name').textContent    = name + (desc ? ' — ' + desc : '');
+      phoneRaw = '';
+      updatePhoneDisplay();
+      document.getElementById('step-products').style.display = 'none';
+      document.getElementById('step-phone').classList.add('show');
+    }
+
+    function goBack() {
+      document.getElementById('step-phone').classList.remove('show');
+      document.getElementById('step-products').style.display = 'block';
+    }
+
+    // ── Numpad ────────────────────────────────────────────────────────
+    function numpad(key) {
+      if (key === 'del') {
+        phoneRaw = phoneRaw.slice(0, -1);
+      } else if (phoneRaw.length < 11) {
+        phoneRaw += key;
+      }
+      updatePhoneDisplay();
+    }
+
+    function updatePhoneDisplay() {
+      const d = document.getElementById('phone-display');
+      // Format: 09XX XXX XXXX
+      let f = phoneRaw;
+      if (f.length > 4)  f = f.slice(0,4)  + ' ' + f.slice(4);
+      if (f.length > 8)  f = f.slice(0,8)  + ' ' + f.slice(8);
+      d.value = f;
+      const valid = phoneRaw.length === 11 && phoneRaw.startsWith('09');
+      document.getElementById('confirm-btn').disabled = !valid;
+    }
+
+    // ── Confirm and place order ───────────────────────────────────────
+    function confirmOrder() {
+      if (!selectedProduct || phoneRaw.length !== 11) return;
+      if (!phoneRaw.startsWith('09')) {
+        alert('Phone number must start with 09');
+        return;
+      }
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = '/eload/order';
+
+      const fields = {
+        product_id: selectedProduct.id,
+        phone:      phoneRaw,
+        network:    selectedProduct.network,
+        amount:     selectedProduct.price,
+      };
+      for (const [k,v] of Object.entries(fields)) {
+        const inp = document.createElement('input');
+        inp.type = 'hidden'; inp.name = k; inp.value = v;
+        form.appendChild(inp);
+      }
+      document.body.appendChild(form);
+      form.submit();
+    }
+  </script>
+</body>
+</html>

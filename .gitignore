@@ -1,0 +1,4 @@
+node_modules/
+data/pisowifi.db
+*.log
+.env

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Active Sessions — Piso WiFi</title>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-layout">
+  <%- include('_nav') %>
+  <main>
+    <h2>Active Sessions (<%= sessions.length %>)</h2>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>MAC Address</th>
+          <th>IP</th>
+          <th>Coins Paid</th>
+          <th>Time Left</th>
+          <th>Expires</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% sessions.forEach(s => {
+          const rem = s.remaining_seconds;
+          const h   = Math.floor(rem/3600);
+          const m   = Math.floor((rem%3600)/60);
+          const sec = rem % 60;
+          const timeStr = h+'h '+m+'m '+sec+'s';
+        %>
+          <tr>
+            <td><code><%= s.mac_address %></code></td>
+            <td><%= s.ip_address || '—' %></td>
+            <td>₱<%= s.coins_paid %></td>
+            <td class="time-left"><%= timeStr %></td>
+            <td><%= new Date(s.expires_at * 1000).toLocaleTimeString('en-PH') %></td>
+            <td>
+              <form action="/admin/sessions/kick" method="POST" onsubmit="return confirm('Disconnect this user?')">
+                <input type="hidden" name="session_id" value="<%= s.id %>">
+                <button type="submit" class="btn-danger small">Disconnect</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+        <% if (sessions.length === 0) { %>
+          <tr><td colspan="6" class="empty">No active sessions.</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </main>
+  <script>
+    // Auto-refresh only when tab is visible, so it doesn't interrupt the admin
+    let _refreshTimer = null;
+    function scheduleRefresh() {
+      clearTimeout(_refreshTimer);
+      _refreshTimer = setTimeout(() => {
+        if (!document.hidden) location.reload();
+        else scheduleRefresh(); // retry when tab becomes visible again
+      }, 15000);
+    }
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) scheduleRefresh();
+    });
+    scheduleRefresh();
+  </script>
+</body>
+</html>

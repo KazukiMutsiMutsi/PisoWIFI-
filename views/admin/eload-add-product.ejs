@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Eload Product — Piso WiFi</title>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-layout">
+  <%- include('_nav') %>
+  <main>
+    <h2>📦 Add Eload Product</h2>
+    <% if (message) { %><div class="alert error"><%= message %></div><% } %>
+
+    <div class="card" style="max-width:520px">
+      <form action="/admin/eload/products/add" method="POST">
+
+        <div class="form-group">
+          <label>Network</label>
+          <select name="network" required style="width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;font-size:.95rem">
+            <option value="">-- Select --</option>
+            <option value="Globe">Globe</option>
+            <option value="Smart">Smart</option>
+            <option value="TNT">TNT</option>
+            <option value="Sun">Sun</option>
+            <option value="DITO">DITO</option>
+            <option value="TM">Touch Mobile (TM)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Product Name / Promo</label>
+          <input type="text" name="name" required placeholder="e.g. Globe GoSURF50 or Regular Load">
+        </div>
+
+        <div class="form-group">
+          <label>Description (optional)</label>
+          <input type="text" name="description" placeholder="e.g. 1GB data + 300 texts valid 3 days">
+        </div>
+
+        <div class="form-group">
+          <label>Face Value (₱) — what the customer gets</label>
+          <input type="number" name="face_value" min="1" step="1" required placeholder="50">
+        </div>
+
+        <div class="form-group">
+          <label>Your Dealer/Cost Price (₱) — what it costs you</label>
+          <input type="number" name="dealer_price" min="0.01" step="0.01" required placeholder="48.00">
+          <small style="color:#888">Usually 2–5% less than face value</small>
+        </div>
+
+        <div class="form-group">
+          <label>Selling Price (₱) — what customer pays at machine</label>
+          <input type="number" name="selling_price" min="1" step="1" required placeholder="50">
+        </div>
+
+        <div id="profit-preview" style="background:#f0fdf4;border:1px solid #86efac;
+             border-radius:8px;padding:12px;margin-bottom:16px;display:none">
+          Profit per sale: <strong id="profit-val"></strong>
+        </div>
+
+        <button type="submit" class="btn-primary">Add Product</button>
+        <a href="/admin/eload" style="margin-left:12px;color:#888">Cancel</a>
+      </form>
+    </div>
+
+    <div class="card" style="max-width:520px;margin-top:16px">
+      <h3>💡 Typical Dealer Discounts (PH)</h3>
+      <table class="data-table" style="font-size:.85rem">
+        <thead><tr><th>Network</th><th>Regular Load</th><th>Data Promos</th></tr></thead>
+        <tbody>
+          <tr><td>Globe / TM</td><td>5% discount</td><td>Face value</td></tr>
+          <tr><td>Smart / TNT</td><td>5% discount</td><td>Face value</td></tr>
+          <tr><td>Sun</td><td>5% discount</td><td>Face value</td></tr>
+          <tr><td>DITO</td><td>5% discount</td><td>Face value</td></tr>
+        </tbody>
+      </table>
+      <small style="color:#888">Example: ₱50 load costs you ₱47.50, sell at ₱50 = ₱2.50 profit</small>
+    </div>
+  </main>
+
+  <script>
+    const fv = document.querySelector('[name="face_value"]');
+    const dp = document.querySelector('[name="dealer_price"]');
+    const sp = document.querySelector('[name="selling_price"]');
+    const preview = document.getElementById('profit-preview');
+    const profitVal = document.getElementById('profit-val');
+
+    // Auto-fill selling price from face value
+    fv.addEventListener('input', () => {
+      if (!sp.value) sp.value = fv.value;
+      if (!dp.value && fv.value) dp.value = (parseFloat(fv.value) * 0.95).toFixed(2);
+      calcProfit();
+    });
+
+    function calcProfit() {
+      const profit = parseFloat(sp.value||0) - parseFloat(dp.value||0);
+      if (!isNaN(profit) && sp.value && dp.value) {
+        preview.style.display = 'block';
+        profitVal.textContent = '₱' + profit.toFixed(2) + ' per sale';
+        profitVal.style.color = profit >= 0 ? '#16a34a' : '#dc2626';
+      }
+    }
+    sp.addEventListener('input', calcProfit);
+    dp.addEventListener('input', calcProfit);
+  </script>
+</body>
+</html>

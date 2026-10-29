@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= wifiName %></title>
+  <link rel="stylesheet" href="/css/portal.css">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <div class="hero-banner">
+    <div class="hero-overlay"></div>
+    <div class="hero-text"><span class="hero-tagline"><%= wifiName %></span></div>
+  </div>
+
+  <div class="portal-card">
+
+    <% if (message) { %><div class="alert success"><%= message %></div><% } %>
+    <% if (error)   { %><div class="alert error"><%= error %></div><% } %>
+
+    <% if (active) { %>
+    <!-- ══════════════════════════════════════════
+         CONNECTED — server-side expiry time
+    ══════════════════════════════════════════ -->
+
+      <div class="status-row">
+        <span class="wifi-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+            <path d="M1.42 9a16 16 0 0 1 21.16 0"/>
+            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+            <circle cx="12" cy="20" r="1" fill="currentColor"/>
+          </svg>
+        </span>
+        <span class="status-text" id="status-txt">Connected</span>
+      </div>
+
+      <div class="device-info">
+        <span class="info-pill">MAC: <%= macAddress %></span>
+      </div>
+
+      <% if (active.coins_paid > 0) { %>
+      <div style="text-align:center;margin-bottom:8px;
+           font-size:.82rem;color:rgba(255,255,255,0.35);letter-spacing:1px">
+        🪙 ₱<%= active.coins_paid %> inserted —
+        <%= active.minutes < 60
+          ? active.minutes + ' minutes'
+          : Math.floor(active.minutes/60) + (active.minutes%60>0 ? 'h ' + active.minutes%60 + 'm' : ' hr' + (Math.floor(active.minutes/60)>1?'s':'')) %>
+        session
+      </div>
+      <% } %>
+
+      <p class="remaining-label">REMAINING TIME:</p>
+
+      <div class="big-timer">
+        <span class="timer-part" id="t-h">--</span><span class="timer-unit">HR</span>
+        <span class="timer-sep">:</span>
+        <span class="timer-part" id="t-m">--</span><span class="timer-unit">MIN</span>
+        <span class="timer-sep">:</span>
+        <span class="timer-part" id="t-s">--</span><span class="timer-unit">SEC</span>
+      </div>
+
+      <div class="time-bar-track">
+        <div class="time-bar-fill" id="time-bar"></div>
+      </div>
+
+      <div id="pause-banner" style="display:none;text-align:center;
+           background:rgba(251,146,60,0.15);border:1px solid rgba(251,146,60,0.4);
+           border-radius:10px;padding:10px;margin-bottom:12px;
+           color:#fb923c;font-weight:700;letter-spacing:1px;font-size:.9rem">
+        ⏸ TIME PAUSED
+      </div>
+
+      <div class="action-buttons">
+        <button class="action-btn red" id="pause-btn" onclick="togglePause()">
+          ⏸ Pause Time
+        </button>
+        <div class="coin-hint">🪙 Insert a coin to add more time</div>
+        <a href="/eload" class="action-btn blue">📱 Buy Eload</a>
+      </div>
+
+    <% } else { %>
+    <!-- ══════════════════════════════════════════
+         NOT CONNECTED
+    ══════════════════════════════════════════ -->
+
+      <div class="status-row disconnected">
+        <span class="wifi-icon off">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="1" y1="1" x2="23" y2="23"/>
+            <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>
+            <path d="M5 12.55a11 11 0 0 1 5.17-2.39"/>
+            <path d="M10.71 5.05A16 16 0 0 1 22.56 9"/>
+            <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/>
+            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+            <circle cx="12" cy="20" r="1" fill="currentColor"/>
+          </svg>
+        </span>
+        <span class="status-text off">Not Connected</span>
+      </div>
+
+      <div class="insert-coin-box">
+        <div class="coin-animation">₱</div>
+        <p class="insert-label">Insert coin to connect</p>
+        <p class="insert-sub">Drop a coin into the machine to start your session</p>
+      </div>
+
+      <!-- Rates -->
+      <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
+                  border-radius:12px;padding:14px 16px;margin-bottom:16px">
+        <p style="font-size:.72rem;color:#6b7280;letter-spacing:2px;text-transform:uppercase;
+                  text-align:center;margin-bottom:10px">💰 RATES</p>
+        <% rates.forEach(rate => { %>
+          <div style="display:flex;justify-content:space-between;align-items:center;
+                      padding:7px 10px;border-radius:8px;margin-bottom:4px;
+                      background:rgba(255,255,255,0.03)">
+            <span style="font-family:'Orbitron',monospace;font-size:1rem;
+                         font-weight:700;color:#f87171">₱<%= rate.coins %></span>
+            <span style="color:rgba(255,255,255,0.3);font-size:.8rem">→</span>
+            <span style="font-weight:700;color:#22c55e;font-size:.9rem">
+              <%= rate.minutes < 60
+                ? rate.minutes + ' mins'
+                : (rate.minutes === 1440 ? '24 hrs (Full Day)'
+                  : Math.floor(rate.minutes/60) + (rate.minutes%60>0 ? ' hr ' + rate.minutes%60 + ' min' : ' hr' + (Math.floor(rate.minutes/60)>1?'s':''))) %>
+            </span>
+          </div>
+        <% }) %>
+      </div>
+
+      <a href="/portal/waiting" class="btn-trial" style="display:block;text-align:center;text-decoration:none">
+        🪙 Insert Coin to Connect
+      </a>
+
+      <a href="/eload" class="action-btn blue"
+         style="display:block;text-align:center;text-decoration:none;margin-top:8px">
+        📱 Buy Eload
+      </a>
+
+    <% } %>
+
+    <div class="portal-footer">Powered by: <strong><%= wifiName %></strong></div>
+  </div>
+
+  <script>
+  // ══════════════════════════════════════════════════
+  //  AUDIO — unlocked on first interaction
+  // ══════════════════════════════════════════════════
+  let _ctx = null;
+  function audio() {
+    if (!_ctx) _ctx = new (window.AudioContext || window.webkitAudioContext)();
+    return _ctx;
+  }
+  document.addEventListener('click',      () => audio(), { once: false });
+  document.addEventListener('touchstart', () => audio(), { once: false });
+
+  function beep(freq, dur, vol, type, delay) {
+    try {
+      const c=audio(), t=c.currentTime+(delay||0)/1000;
+      const o=c.createOscillator(), g=c.createGain();
+      o.connect(g); g.connect(c.destination);
+      o.type=type||'sine'; o.frequency.value=freq;
+      g.gain.setValueAtTime(vol,t);
+      g.gain.exponentialRampToValueAtTime(0.001,t+dur/1000);
+      o.start(t); o.stop(t+dur/1000+0.05);
+    } catch(e){}
+  }
+
+  function sndWarning5() { beep(880,200,0.45,'triangle',0); beep(660,300,0.4,'triangle',260); }
+  function sndWarning1() { beep(1046,150,0.5,'triangle',0); beep(1046,150,0.5,'triangle',220); beep(1046,200,0.5,'triangle',440); }
+  function sndAlert()    { beep(660,120,0.45,'square',0);   beep(550,120,0.45,'square',180); }
+  function sndCritical() { beep(880,90,0.55,'square',0); beep(660,90,0.55,'square',110); beep(440,130,0.55,'square',220); }
+  function sndExpired()  { beep(330,300,0.5,'sawtooth',0); beep(220,500,0.5,'sawtooth',360); beep(110,700,0.4,'sawtooth',900); }
+  function sndPause()    { beep(440,150,0.3,'triangle',0); }
+  function sndResume()   { beep(660,150,0.4,'sine',0); beep(880,200,0.4,'sine',170); }
+
+  <% if (active) { %>
+  // ══════════════════════════════════════════════════
+  //  CONNECTED — server-side countdown
+  //  Uses exact expires_at from server so it's always
+  //  accurate even after page refresh.
+  // ══════════════════════════════════════════════════
+
+  // Server tells us exact Unix timestamp when session expires
+  const EXPIRES_AT  = <%= active.expires_at %>;   // Unix seconds
+  const TOTAL_SECS  = <%= active.minutes * 60 %>;
+  let _paused       = false;
+  let _prev         = null;
+  let _expFired     = false;
+
+  function tick() {
+    if (_paused) return;
+
+    // Compute remaining from server expiry time — accurate after refresh
+    const now = Math.floor(Date.now() / 1000);
+    let s     = EXPIRES_AT - now;
+
+    if (s <= 0) {
+      document.getElementById('t-h').textContent = '00';
+      document.getElementById('t-m').textContent = '00';
+      document.getElementById('t-s').textContent = '00';
+      if (!_expFired) {
+        _expFired = true;
+        sndExpired();
+        setColor('grey');
+        const bar = document.getElementById('time-bar');
+        if (bar) bar.style.width = '0%';
+        const st = document.getElementById('status-txt');
+        if (st) { st.textContent = 'Expired'; st.style.color = '#ef4444'; }
+        // Reload after 3s to show not-connected screen
+        setTimeout(() => location.reload(), 3000);
+      }
+      return;
+    }
+
+    document.getElementById('t-h').textContent = String(Math.floor(s/3600)).padStart(2,'0');
+    document.getElementById('t-m').textContent = String(Math.floor((s%3600)/60)).padStart(2,'0');
+    document.getElementById('t-s').textContent = String(s%60).padStart(2,'0');
+
+    // Progress bar
+    const bar = document.getElementById('time-bar');
+    if (bar) bar.style.width = Math.max(0, Math.min(100,(s/TOTAL_SECS)*100)) + '%';
+
+    // Color stages
+    if      (s > 300) setColor('green');
+    else if (s > 60)  setColor('orange');
+    else              setColor('red');
+
+    // Sound warnings — fire once per threshold crossing
+    if (_prev !== null) {
+      if (_prev > 300 && s <= 300) sndWarning5();
+      if (_prev > 60  && s <= 60)  sndWarning1();
+      if (s <= 30 && s > 0 && s % 10 === 0 && s !== _prev) sndAlert();
+      if (s <= 10 && s > 0) { sndCritical(); setPulse(true); }
+      if (s > 10)             setPulse(false);
+    }
+    _prev = s;
+  }
+
+  function setColor(c) {
+    const col  = {green:'#22c55e', orange:'#fb923c', red:'#ef4444', grey:'#6b7280'}[c] || '#22c55e';
+    const glow = {green:'rgba(34,197,94,0.5)', orange:'rgba(251,146,60,0.5)', red:'rgba(239,68,68,0.5)', grey:'transparent'}[c] || 'transparent';
+    document.querySelectorAll('.timer-part').forEach(p => {
+      p.style.color = col; p.style.textShadow = '0 0 18px '+glow;
+    });
+    const bar = document.getElementById('time-bar');
+    if (bar && c !== 'grey') { bar.style.background = col; bar.style.boxShadow = '0 0 6px '+glow; }
+  }
+
+  function setPulse(on) {
+    document.querySelectorAll('.timer-part').forEach(p => {
+      p.style.animation = on ? 'pulse-timer 0.5s ease-in-out infinite' : '';
+    });
+  }
+
+  function togglePause() {
+    _paused = !_paused;
+    const btn    = document.getElementById('pause-btn');
+    const banner = document.getElementById('pause-banner');
+    if (_paused) {
+      sndPause();
+      btn.textContent      = '▶ Resume Time';
+      btn.style.background = 'linear-gradient(135deg,#16a34a,#15803d)';
+      if (banner) banner.style.display = 'block';
+    } else {
+      sndResume();
+      btn.textContent      = '⏸ Pause Time';
+      btn.style.background = '';
+      if (banner) banner.style.display = 'none';
+    }
+  }
+
+  // Start ticking immediately
+  tick();
+  setInterval(tick, 1000);
+
+  <% } %>
+  </script>
+</body>
+</html>

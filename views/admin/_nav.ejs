@@ -1,0 +1,28 @@
+<!-- Mobile hamburger button -->
+<button class="mobile-menu-btn" onclick="toggleNav()" aria-label="Menu">☰</button>
+<div class="sidebar-overlay" id="nav-overlay" onclick="closeNav()"></div>
+
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo">₱ TechPiso WiFi</div>
+  <ul>
+    <li><a href="/admin"              onclick="closeNav()">📊 Dashboard</a></li>
+    <li><a href="/admin/sessions"     onclick="closeNav()">📡 Active Sessions</a></li>
+    <li><a href="/admin/transactions" onclick="closeNav()">💰 Transactions</a></li>
+    <li><a href="/admin/rates"        onclick="closeNav()">⚙️ Rates</a></li>
+    <li><a href="/admin/eload"        onclick="closeNav()">📱 Eload Vending</a></li>
+    <li><a href="/admin/settings"     onclick="closeNav()">🔧 Settings</a></li>
+    <li><a href="/admin/logout" class="logout">🚪 Logout</a></li>
+  </ul>
+  <div class="sidebar-user">👤 <%= typeof admin !== 'undefined' ? admin : '' %></div>
+</nav>
+
+<script>
+function toggleNav() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('nav-overlay').classList.toggle('show');
+}
+function closeNav() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('nav-overlay').classList.remove('show');
+}
+</script>

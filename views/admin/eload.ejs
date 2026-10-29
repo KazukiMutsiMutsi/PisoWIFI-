@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eload Management — Piso WiFi</title>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-layout">
+  <%- include('_nav') %>
+  <main>
+    <h2>📱 Eload Vending Management</h2>
+    <% if (message) { %>
+      <div class="alert <%= message.startsWith('Error') ? 'error' : 'success' %>">
+        <%= decodeURIComponent(message.replace(/\+/g, ' ')) %>
+      </div>
+    <% } %>
+
+    <!-- ── Balance Summary ─────────────────────────────────────────── -->
+    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(160px,1fr))">
+      <div class="stat-card orange">
+        <div class="stat-value">₱<%= balance.toFixed(2) %></div>
+        <div class="stat-label">Eload Stock (Balance)</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-value">₱<%= todaySold %></div>
+        <div class="stat-label">Sold Today</div>
+      </div>
+      <div class="stat-card purple">
+        <div class="stat-value">₱<%= totalSold %></div>
+        <div class="stat-label">Total Sold</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-value"><%= pendingCount %></div>
+        <div class="stat-label">Pending Orders</div>
+      </div>
+    </div>
+
+    <!-- ── Low Balance Warning ────────────────────────────────────── -->
+    <% if (balance < 100) { %>
+      <div class="alert error">
+        ⚠️ <strong>Low eload balance!</strong> You only have ₱<%= balance.toFixed(2) %> left.
+        Add more load below before customers run out.
+      </div>
+    <% } %>
+
+    <div class="card-row">
+
+      <!-- ── Restock: Add Load ──────────────────────────────────── -->
+      <div class="card">
+        <h3>➕ Restock Eload</h3>
+        <p style="color:#666;font-size:.85rem;margin-bottom:12px">
+          Enter the amount you loaded into your eload wallet (GCash, PayMaya, etc.)
+        </p>
+        <form action="/admin/eload/add" method="POST">
+          <div class="form-group">
+            <label>Amount (₱)</label>
+            <input type="number" name="amount" min="1" step="1" required placeholder="e.g. 500">
+          </div>
+          <div class="form-group">
+            <label>Source / Note</label>
+            <input type="text" name="note" placeholder="GCash load / BDO transfer" required>
+          </div>
+          <button type="submit" class="btn-primary">Add to Stock</button>
+        </form>
+      </div>
+
+      <!-- ── Manual Sell Eload ──────────────────────────────────── -->
+      <div class="card">
+        <h3>📤 Sell Eload Manually</h3>
+        <p style="color:#666;font-size:.85rem;margin-bottom:12px">
+          Use this when a customer pays cash at the machine directly.
+        </p>
+        <form action="/admin/eload/sell" method="POST">
+          <div class="form-group">
+            <label>Network</label>
+            <select name="network" required>
+              <option value="">-- Select Network --</option>
+              <option value="Globe">Globe</option>
+              <option value="Smart">Smart</option>
+              <option value="TNT">TNT</option>
+              <option value="Sun">Sun</option>
+              <option value="DITO">DITO</option>
+              <option value="TM">Touch Mobile (TM)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Amount (₱)</label>
+            <select name="amount" required>
+              <option value="">-- Select Amount --</option>
+              <option value="10">₱10</option>
+              <option value="15">₱15</option>
+              <option value="20">₱20</option>
+              <option value="30">₱30</option>
+              <option value="50">₱50</option>
+              <option value="100">₱100</option>
+              <option value="115">₱115</option>
+              <option value="150">₱150</option>
+              <option value="300">₱300</option>
+              <option value="500">₱500</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Customer Phone Number</label>
+            <input type="tel" name="phone" placeholder="09XXXXXXXXX" pattern="09[0-9]{9}" required>
+          </div>
+          <button type="submit" class="btn-primary">Sell Eload</button>
+        </form>
+      </div>
+
+    </div>
+
+    <!-- ── Eload Products / Packages ──────────────────────────────── -->
+    <div class="section-header">
+      <h3>📦 Eload Products on Vending Machine</h3>
+      <a href="/admin/eload/products/add" class="btn-primary small">+ Add Product</a>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Network</th>
+          <th>Name / Promo</th>
+          <th>Face Value</th>
+          <th>Your Price</th>
+          <th>Selling Price</th>
+          <th>Profit</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% products.forEach(p => {
+          const profit = (p.selling_price - p.dealer_price).toFixed(2);
+        %>
+          <tr>
+            <td><span class="network-badge net-<%= p.network.toLowerCase() %>"><%= p.network %></span></td>
+            <td><strong><%= p.name %></strong><br><small style="color:#888"><%= p.description || '' %></small></td>
+            <td>₱<%= p.face_value %></td>
+            <td>₱<%= p.dealer_price.toFixed(2) %></td>
+            <td>₱<%= p.selling_price.toFixed(2) %></td>
+            <td class="<%= profit > 0 ? 'profit-pos' : 'profit-neg' %>">₱<%= profit %></td>
+            <td><span class="badge <%= p.active ? 'active' : 'inactive' %>"><%= p.active ? 'Active' : 'Hidden' %></span></td>
+            <td>
+              <form action="/admin/eload/products/toggle" method="POST" style="display:inline">
+                <input type="hidden" name="id" value="<%= p.id %>">
+                <input type="hidden" name="active" value="<%= p.active ? 0 : 1 %>">
+                <button class="btn-primary small"><%= p.active ? 'Hide' : 'Show' %></button>
+              </form>
+              <form action="/admin/eload/products/delete" method="POST" style="display:inline"
+                    onsubmit="return confirm('Delete this product?')">
+                <input type="hidden" name="id" value="<%= p.id %>">
+                <button class="btn-danger small">Del</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+        <% if (products.length === 0) { %>
+          <tr><td colspan="8" class="empty">No products yet. Add your eload packages above.</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+
+    <!-- ── Pending / Recent Eload Orders ──────────────────────────── -->
+    <h3>🧾 Recent Eload Orders</h3>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Phone</th>
+          <th>Network</th>
+          <th>Amount</th>
+          <th>Profit</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% orders.forEach(o => { %>
+          <tr>
+            <td><%= new Date(o.created_at * 1000).toLocaleString('en-PH') %></td>
+            <td><strong><%= o.phone %></strong></td>
+            <td><span class="network-badge net-<%= o.network.toLowerCase() %>"><%= o.network %></span></td>
+            <td>₱<%= o.amount %></td>
+            <td class="profit-pos">+₱<%= o.profit.toFixed(2) %></td>
+            <td>
+              <span class="badge
+                <%= o.status === 'completed' ? 'active' :
+                   o.status === 'pending'   ? 'pending' : 'inactive' %>">
+                <%= o.status === 'completed' ? '✅ Done' :
+                   o.status === 'pending'   ? '⏳ Pending' : '❌ Failed' %>
+              </span>
+            </td>
+            <td>
+              <% if (o.status === 'pending') { %>
+                <form action="/admin/eload/orders/complete" method="POST" style="display:inline">
+                  <input type="hidden" name="id" value="<%= o.id %>">
+                  <button class="btn-primary small">✅ Mark Done</button>
+                </form>
+                <form action="/admin/eload/orders/fail" method="POST" style="display:inline">
+                  <input type="hidden" name="id" value="<%= o.id %>">
+                  <button class="btn-danger small">❌ Failed</button>
+                </form>
+              <% } else { %>
+                <span style="color:#999;font-size:.8rem">—</span>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+        <% if (orders.length === 0) { %>
+          <tr><td colspan="7" class="empty">No eload orders yet.</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+
+    <!-- ── Stock Transaction Log ──────────────────────────────────── -->
+    <h3>📒 Stock Ledger</h3>
+    <table class="data-table">
+      <thead>
+        <tr><th>Type</th><th>Amount</th><th>Note</th><th>Date</th></tr>
+      </thead>
+      <tbody>
+        <% ledger.forEach(tx => { %>
+          <tr>
+            <td>
+              <span class="badge <%= tx.type === 'load' ? 'active' : 'inactive' %>">
+                <%= tx.type === 'load' ? '➕ Restock' : '➖ Sold/Used' %>
+              </span>
+            </td>
+            <td>₱<%= tx.amount_php.toFixed(2) %></td>
+            <td><%= tx.note %></td>
+            <td><%= new Date(tx.created_at * 1000).toLocaleString('en-PH') %></td>
+          </tr>
+        <% }) %>
+        <% if (ledger.length === 0) { %>
+          <tr><td colspan="4" class="empty">No ledger entries yet.</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+
+  </main>
+</body>
+</html>

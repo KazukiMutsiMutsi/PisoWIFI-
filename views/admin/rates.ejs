@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rates — Piso WiFi</title>
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-layout">
+  <%- include('_nav') %>
+  <main>
+    <h2>Rate Management</h2>
+    <% if (message) { %><div class="alert success"><%= message %></div><% } %>
+
+    <!-- Add new rate -->
+    <div class="card">
+      <h3>Add New Rate</h3>
+      <form action="/admin/rates/add" method="POST" class="inline-form">
+        <div class="form-group">
+          <label>Coins (₱)</label>
+          <input type="number" name="coins" min="1" required placeholder="1">
+        </div>
+        <div class="form-group">
+          <label>Minutes</label>
+          <input type="number" name="minutes" min="1" required placeholder="15">
+        </div>
+        <div class="form-group">
+          <label>Label</label>
+          <input type="text" name="label" required placeholder="₱1 = 15 mins">
+        </div>
+        <button type="submit" class="btn-primary">Add Rate</button>
+      </form>
+    </div>
+
+    <!-- Existing rates -->
+    <table class="data-table">
+      <thead>
+        <tr><th>Coins</th><th>Minutes</th><th>Label</th><th>Status</th><th>Edit</th><th>Delete</th></tr>
+      </thead>
+      <tbody>
+        <% rates.forEach(r => { %>
+          <tr>
+            <td>₱<%= r.coins %></td>
+            <td><%= r.minutes %> min</td>
+            <td><%= r.label %></td>
+            <td><span class="badge <%= r.active ? 'active' : 'inactive' %>"><%= r.active ? 'Active' : 'Inactive' %></span></td>
+            <td>
+              <form action="/admin/rates/update" method="POST" style="display:flex;gap:4px;flex-wrap:wrap">
+                <input type="hidden" name="id" value="<%= r.id %>">
+                <input type="number" name="coins"   value="<%= r.coins %>"   style="width:60px">
+                <input type="number" name="minutes" value="<%= r.minutes %>" style="width:70px">
+                <input type="text"   name="label"   value="<%= r.label %>"   style="width:120px">
+                <label><input type="checkbox" name="active" <%= r.active ? 'checked' : '' %>> Active</label>
+                <button type="submit" class="btn-primary small">Save</button>
+              </form>
+            </td>
+            <td>
+              <form action="/admin/rates/delete" method="POST" onsubmit="return confirm('Delete this rate?')">
+                <input type="hidden" name="id" value="<%= r.id %>">
+                <button type="submit" class="btn-danger small">Delete</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </main>
+</body>
+</html>

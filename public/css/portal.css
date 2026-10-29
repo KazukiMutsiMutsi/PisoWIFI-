@@ -1,0 +1,333 @@
+/* ═══════════════════════════════════════════════════════
+   TechPiso WiFi Portal — Tekken 8 Dark Theme
+   Fonts are loaded inline so they work BEFORE internet
+   is granted (captive portal environment).
+   ═══════════════════════════════════════════════════════ */
+
+/* System-font stack used as fallback when Google Fonts CDN
+   is unreachable (which is always true before pay) */
+:root {
+  --font-ui:    'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-orb:   'Orbitron', 'Courier New', monospace;   /* timer digits */
+  --font-raj:   'Rajdhani', var(--font-ui);             /* labels */
+}
+
+/* Attempt to load fonts — will silently fall back if offline */
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Orbitron:wght@700;900&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-raj);
+  background: #0a0a0f;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 40px;
+}
+
+/* ── Shared container (used by eload portal + receipt) ───────────────────── */
+
+.container {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 28px 20px;
+  color: #e5e7eb;
+  margin-top: 20px;
+}
+
+/* ── Hero Banner ─────────────────────────────────────────────────────────── */
+
+.hero-banner {
+  width: 100%;
+  max-width: 480px;
+  height: 240px;
+  position: relative;
+  overflow: hidden;
+  background:
+    url('/img/banner.jpg') center 20% / cover no-repeat,
+    linear-gradient(160deg, #0d0d1a 0%, #1a0a0a 100%);
+  border-bottom: 2px solid rgba(220,38,38,0.6);
+  box-shadow: 0 0 60px rgba(220,38,38,0.25) inset;
+}
+
+.hero-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 60% 50%, rgba(220,38,38,0.3) 0%, transparent 60%),
+    linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.5) 100%);
+  z-index: 1;
+}
+
+.hero-banner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 40%, #0a0a0f 100%);
+}
+
+.hero-overlay {
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 2px,
+    rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px
+  );
+  z-index: 1;
+}
+
+.hero-text {
+  position: absolute; bottom: 18px; left: 0; right: 0;
+  text-align: center; z-index: 2;
+}
+
+.hero-tagline {
+  font-family: var(--font-orb);
+  font-size: 1.05rem; font-weight: 700; color: #fff;
+  letter-spacing: 3px; text-transform: uppercase;
+  text-shadow: 0 0 20px rgba(255,80,0,0.8), 0 2px 4px rgba(0,0,0,0.9);
+}
+
+/* ── Portal card ─────────────────────────────────────────────────────────── */
+
+.portal-card {
+  width: 100%; max-width: 480px;
+  background: linear-gradient(180deg, #111118 0%, #0d0d14 100%);
+  border: 1px solid rgba(220,38,38,0.25);
+  border-top: none;
+  border-radius: 0 0 20px 20px;
+  padding: 24px 20px 28px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.7);
+  color: #e5e7eb;
+}
+
+/* ── Alerts ──────────────────────────────────────────────────────────────── */
+
+.alert {
+  border-radius: 8px; padding: 11px 14px;
+  margin-bottom: 16px; font-size: .9rem; font-weight: 600;
+}
+.alert.success {
+  background: rgba(34,197,94,0.12);
+  border: 1px solid rgba(34,197,94,0.4); color: #86efac;
+}
+.alert.error {
+  background: rgba(239,68,68,0.12);
+  border: 1px solid rgba(239,68,68,0.4); color: #fca5a5;
+}
+
+/* ── Status row ──────────────────────────────────────────────────────────── */
+
+.status-row {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; margin-bottom: 10px;
+}
+.wifi-icon { width: 32px; height: 32px; color: #22c55e; display:flex; align-items:center; }
+.wifi-icon.off { color: #6b7280; }
+.wifi-icon svg { width: 100%; height: 100%; }
+
+.status-text {
+  font-family: var(--font-orb);
+  font-size: 1.4rem; font-weight: 700; color: #22c55e;
+  letter-spacing: 1px;
+  text-shadow: 0 0 12px rgba(34,197,94,0.5);
+  transition: color .4s;
+}
+.status-text.off { color: #6b7280; text-shadow: none; }
+
+/* ── Device info ─────────────────────────────────────────────────────────── */
+
+.device-info { text-align: center; margin-bottom: 14px; }
+.info-pill {
+  display: inline-block;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px; padding: 4px 14px;
+  font-size: .78rem; color: #9ca3af;
+  letter-spacing: 1px; font-family: monospace;
+}
+
+/* ── Remaining label ─────────────────────────────────────────────────────── */
+
+.remaining-label {
+  text-align: center; font-size: .72rem;
+  letter-spacing: 3px; color: #6b7280;
+  margin-bottom: 6px; text-transform: uppercase;
+}
+
+/* ── Big timer ───────────────────────────────────────────────────────────── */
+
+.big-timer {
+  display: flex; align-items: baseline;
+  justify-content: center; gap: 2px; margin-bottom: 14px;
+}
+.timer-part {
+  font-family: var(--font-orb);
+  font-size: 3.2rem; font-weight: 900; color: #22c55e;
+  line-height: 1;
+  text-shadow: 0 0 20px rgba(34,197,94,0.5);
+  font-variant-numeric: tabular-nums; transition: color .3s;
+}
+.timer-unit {
+  font-family: var(--font-raj);
+  font-size: .7rem; font-weight: 700; color: #6b7280;
+  letter-spacing: 1px; margin: 0 6px 6px 3px; text-transform: uppercase;
+}
+.timer-sep {
+  font-family: var(--font-orb);
+  font-size: 2.4rem; color: rgba(255,255,255,0.2);
+  margin: 0 2px 8px; line-height: 1;
+}
+
+/* ── Progress bar ────────────────────────────────────────────────────────── */
+
+.time-bar-track {
+  height: 4px; background: rgba(255,255,255,0.07);
+  border-radius: 4px; overflow: hidden; margin-bottom: 20px;
+}
+.time-bar-fill {
+  height: 100%; width: 100%; background: #22c55e;
+  border-radius: 4px;
+  transition: width .9s linear, background .5s;
+  box-shadow: 0 0 6px rgba(34,197,94,0.6);
+}
+
+/* ── Action buttons ──────────────────────────────────────────────────────── */
+
+.action-buttons { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+
+.action-btn {
+  display: block; width: 100%; padding: 14px;
+  border: none; border-radius: 10px;
+  font-family: var(--font-raj);
+  font-size: 1.05rem; font-weight: 700; letter-spacing: 1px;
+  cursor: pointer; text-align: center; text-decoration: none;
+  transition: filter .15s, transform .1s; color: #fff;
+}
+.action-btn:active { transform: scale(0.98); filter: brightness(0.85); }
+.action-btn.green { background: linear-gradient(135deg,#16a34a,#15803d); box-shadow: 0 4px 14px rgba(22,163,74,0.35); }
+.action-btn.red   { background: linear-gradient(135deg,#dc2626,#b91c1c); box-shadow: 0 4px 14px rgba(220,38,38,0.35); }
+.action-btn.blue  { background: linear-gradient(135deg,#2563eb,#1d4ed8); box-shadow: 0 4px 14px rgba(37,99,235,0.35); }
+
+/* ── Coin hint (add more time nudge) ─────────────────────────────────────── */
+
+.coin-hint {
+  text-align: center; padding: 14px 20px;
+  background: rgba(247,201,72,0.07);
+  border: 1px dashed rgba(247,201,72,0.25);
+  border-radius: 12px; color: #d4a827;
+  font-size: .9rem; font-weight: 600; letter-spacing: .5px;
+}
+
+/* ── Insert coin box (not-connected state) ───────────────────────────────── */
+
+.status-row.disconnected { margin-bottom: 8px; }
+
+.insert-coin-box {
+  text-align: center; padding: 28px 20px 24px; margin-bottom: 8px;
+}
+.coin-animation {
+  width: 80px; height: 80px;
+  background: linear-gradient(135deg,#f7c948,#e07b00);
+  border-radius: 50%; font-size: 2.4rem; line-height: 80px;
+  margin: 0 auto 16px;
+  box-shadow: 0 0 30px rgba(247,201,72,0.4);
+  animation: coin-pulse 2s ease-in-out infinite;
+}
+@keyframes coin-pulse {
+  0%,100% { transform:scale(1);    box-shadow:0 0 30px rgba(247,201,72,0.4); }
+  50%      { transform:scale(1.08); box-shadow:0 0 50px rgba(247,201,72,0.7); }
+}
+.insert-label {
+  font-family: var(--font-orb);
+  font-size: 1rem; font-weight: 700; color: #f7c948;
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px;
+}
+.insert-sub { font-size: .82rem; color: #6b7280; letter-spacing: .5px; }
+
+/* ── Divider ─────────────────────────────────────────────────────────────── */
+
+.divider-line { display: none; } /* removed from customer portal */
+
+/* ── Portal footer ───────────────────────────────────────────────────────── */
+
+.portal-footer {
+  text-align: center; margin-top: 20px;
+  font-size: .75rem; color: #374151; letter-spacing: 1px;
+}
+.portal-footer strong { color: #4b5563; }
+
+/* ── Eload portal legacy classes (eload-portal.ejs + eload-receipt.ejs) ──── */
+
+.logo-area { text-align: center; margin-bottom: 24px; }
+.coin-icon {
+  width: 72px; height: 72px;
+  background: linear-gradient(135deg,#f7c948,#e07b00);
+  border-radius: 50%; font-size: 36px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 12px;
+  box-shadow: 0 4px 20px rgba(247,201,72,0.4);
+}
+h1 { font-size: 1.6rem; color: #f7c948; }
+.tagline { color: rgba(255,255,255,0.6); font-size: .9rem; margin-top: 4px; }
+.footer  { text-align: center; margin-top: 16px; color: rgba(255,255,255,0.3); font-size: .75rem; }
+
+/* btn-pay — used in eload-receipt.ejs and eload-portal.ejs */
+.btn-pay {
+  width: 100%; padding: 16px;
+  background: linear-gradient(135deg,#f7c948,#e07b00);
+  border: none; border-radius: 12px;
+  color: #1a1a2e; font-size: 1.1rem; font-weight: 700;
+  cursor: pointer;
+  transition: transform .1s, box-shadow .2s;
+  box-shadow: 0 4px 20px rgba(247,201,72,0.3);
+  display: block; text-align: center; text-decoration: none;
+}
+.btn-pay:active { transform: scale(0.98); }
+
+/* ── Timer pulse animation ───────────────────────────────────────────────── */
+
+@keyframes pulse-timer {
+  0%,100% { opacity:1;   transform:scale(1); }
+  50%      { opacity:0.4; transform:scale(1.08); }
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 360px) {
+  .timer-part { font-size: 2.4rem; }
+  .hero-banner { height: 170px; }
+}
+
+/* ── Free Trial Button ───────────────────────────────────────────────────── */
+
+.btn-trial {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #f7c948 0%, #e07b00 100%);
+  border: none;
+  border-radius: 12px;
+  color: #1a1a2e;
+  font-family: var(--font-orb);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: filter .15s, transform .1s;
+  box-shadow: 0 4px 20px rgba(247,201,72,0.4);
+  margin-bottom: 4px;
+}
+.btn-trial:hover   { filter: brightness(1.1); }
+.btn-trial:active  { transform: scale(0.98); }
+.btn-trial:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.5);
+}
